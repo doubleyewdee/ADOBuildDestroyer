@@ -39,7 +39,7 @@ const app = async () => {
             }
         };
         if (!clean) {
-            console.log('Failed to delete all builds. The ADO API is really bad. Good luck with the UI.');
+            console.log('Failed to delete all builds. The ADO API struggles with old builds. Good luck with the UI.');
             return clean;
         }
     }
@@ -49,7 +49,7 @@ const app = async () => {
 }
 
 if (!app()) {
-    console.log('Failed to delete all builds. The ADO API is really bad. Good luck with the UI.');
+    console.log('Failed to delete all builds.');
 } else {
     console.log('I believe in miracles! Cleaned up all builds!');
 }

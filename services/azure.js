@@ -25,7 +25,7 @@ const getAllBuilds = async () => {
 
 const getBuildLeases = async buildID => {
     const params = {
-        'api-version': '7.1-preview.2'
+        'api-version': '6.0'
     }
 
     try {
