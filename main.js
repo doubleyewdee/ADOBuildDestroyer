@@ -1,27 +1,51 @@
-require("./config/config");
+const { config } = require("./config/config");
 const { getAllBuilds, getBuildLeases, deleteBuildLease, removeKeepForeverOnBuild, deleteBuild } = require('./services/azure');
 
 const app = async () => {
+    clean = true;
+    while (true) {
+        const builds = await getAllBuilds();
 
-    const builds = await getAllBuilds();
+        if (builds.length === 0) break;
 
-    for (const build of builds) {
-        if (build.keepForever === true) {
-            await removeKeepForeverOnBuild(build.url);
-        }
+        for (const build of builds) {
+            if (build.keepForever === true) {
+                if (!await removeKeepForeverOnBuild(build.id)) {
+                    console.log(`Failed to remove keepforever bit on build ${build.id}`);
+                    clean = false;
+                }
+            }
 
-        if (build.retainedByRelease === true) {
-            const leases = await getBuildLeases(build.id);
-            for (const lease of leases) {
-                if (lease.protectPipeline === true) await deleteBuildLease(lease.leaseId);
-            };
-        }
+            if (build.retainedByRelease === true) {
+                const leases = await getBuildLeases(build.id);
+                if (!leases || leases.length === 0) {
+                    console.log('Legacy build has magic leases. giving up, go use the UI');
+                    continue;
+                }
+                for (const lease of leases) {
+                    if (lease.protectPipeline === true) {
+                        if (!await deleteBuildLease(lease.leaseId)) {
+                            console.log(`Failed to delete lease ${lease.leaseId}`);
+                            clean = false;
+                        }
+                    }
+                };
+            }
 
-        await deleteBuild(build.url);
-    };
+            if (!await deleteBuild(build.url)) {
+                console.log(`Failed to delete build ${build.id}`);
+                clean = false;
+            }
+        };
+    }
 
-    console.log('Protect pipeline retention leases deleted successfully');
+    console.log('Deleted all builds successfully!');
+    return clean;
 }
 
-app();
+if (!app()) {
+    console.log('Failed to delete all builds. The ADO API is really bad. Good luck with the UI.');
+} else {
+    console.log('I believe in miracles! Cleaned up all builds!');
+}
 

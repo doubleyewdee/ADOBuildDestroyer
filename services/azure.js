@@ -50,20 +50,26 @@ const deleteBuildLease = async leaseID => {
         await axios.delete(
             `${process.env.BASE_API_URL}/build/retention/leases?ids=${leaseID}`, { headers, params }
         );
+        return true;
     } catch (e) {
         console.log(e.message);
+        return false;
     }
 }
 
-const removeKeepForeverOnBuild = async buildURL => {
+const removeKeepForeverOnBuild = async buildID => {
     const params = {
-        'api-version': '7.1-preview.2'
+        'api-version': '6.0'
     }
     try {
-        console.log(`Removing keepforever bit at ${buildURL}`)
-        await axios.patch(buildURL, {'keepForever': false}, { headers, params });
+        const url = `${process.env.BASE_API_URL}/build/builds/${buildID}`;
+        console.log(`Removing keepforever bit at ${url}`)
+        const res = await axios.patch(url, {'keepForever': false}, { headers, params });
+        console.log(res.status);
+        return res.status === 200 || res.status === 204;
     } catch (e) {
         console.log(e.message);
+        return false;
     }
 }
 
@@ -74,10 +80,11 @@ const deleteBuild = async buildURL => {
 
     try {
         console.log(`Deleting build at ${buildURL}`)
-        await axios.delete(buildURL, { headers, params }
-        );
+        await axios.delete(buildURL, { headers, params });
+        return true;
     } catch (e) {
         console.log(e.message);
+        return false;
     }
 }
 
