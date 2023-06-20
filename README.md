@@ -1,5 +1,8 @@
-# Node.js tool for deleting leases from pipeline builds
-The tool goes trough each pipeline run and deletes leases that retain build. You can delete the pipeline normally afterwards.
+# Node.js tool for deleting Azure DevOps build pipelines
+
+This is a pretty heavily modified fork of [asturlan/RetentionLeaseRemover](https://github.com/asturlan/RetentionLeaseRemover) that enables the deletion of Azure DevOps build pipelines. ADO itself makes this very cumbersome, because if you have any number of builds attached to a build definition with some kind of retention policy, the definition itself cannot be deleted (and there is no UI or CLI mechanism to easily remove builds or retention policies from builds).
+
+If your compliance people come by and flag you for having ancient/encrusted builds/build definitions, this should help you nuke them from orbit. Note that this tool is deeply stupid, might need several runs to clean up, and has basically no good safeguards in place. Use with care.
 
 ## How to use
 
@@ -18,4 +21,7 @@ notes:
 
 ## How to run
 
+```sh
+npm install
 npm run start
+```
