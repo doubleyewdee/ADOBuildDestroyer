@@ -2,8 +2,9 @@ const { config } = require("./config/config");
 const { getAllBuilds, getBuildLeases, deleteBuildLease, removeKeepForeverOnBuild, deleteBuild } = require('./services/azure');
 
 const app = async () => {
-    clean = true;
     while (true) {
+        clean = true;
+
         const builds = await getAllBuilds();
 
         if (builds.length === 0) break;
@@ -37,6 +38,10 @@ const app = async () => {
                 clean = false;
             }
         };
+        if (!clean) {
+            console.log('Failed to delete all builds. The ADO API is really bad. Good luck with the UI.');
+            return clean;
+        }
     }
 
     console.log('Deleted all builds successfully!');
