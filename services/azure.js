@@ -4,15 +4,15 @@ const headers = {
     Authorization: `Basic ${Buffer.from(process.env.USERNAME + ':' + process.env.PAT).toString('base64')}`
 }
 
-const getAllBuilds = async () => {
+const getAllBuilds = async definitionID => {
     const params = { 
-        "definitions": process.env.BUILD_DEFINITION_ID, 
+        "definitions": definitionID, 
         "statusFilter": "completed", 
         "api-version": "6.0" 
     };
 
     try {
-        console.log(`Getting all builds for definition ${process.env.BUILD_DEFINITION_ID}`)
+        console.log(`Getting all builds for definition ${definitionID}`)
         const res = await axios.get(
             `${process.env.BASE_API_URL}/build/builds`, { headers, params }
         );

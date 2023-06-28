@@ -1,11 +1,11 @@
 const { config } = require("./config/config");
 const { getAllBuilds, getBuildLeases, deleteBuildLease, removeKeepForeverOnBuild, deleteBuild, deleteBuildDefinition } = require('./services/azure');
 
-const app = async () => {
+const app = async definitionID => {
     while (true) {
         clean = true;
 
-        const builds = await getAllBuilds();
+        const builds = await getAllBuilds(definitionID);
 
         if (builds.length === 0) break;
 
@@ -19,10 +19,9 @@ const app = async () => {
             const leases = await getBuildLeases(build.id);
             if (leases) {
                 for (const lease of leases) {
-                    if (lease.protectPipeline === true || lease.ownerId === 'User:Legacy Retention Model') {
-                        if (!await deleteBuildLease(lease.leaseId)) {
-                            console.log(`Failed to delete lease ${lease.leaseId}`);
-                        }
+                    if (!await deleteBuildLease(lease.leaseId)) {
+                        console.log(`Failed to delete lease ${lease.leaseId}`);
+                        clean = false;
                     }
                 }
             }
@@ -39,11 +38,11 @@ const app = async () => {
     }
 
     console.log('Done trying to delete leases/builds. Attempting to delete build definition.');
-    await deleteBuildDefinition(process.env.BUILD_DEFINITION_ID);
+    await deleteBuildDefinition(definitionID);
     return clean;
 }
 
-if (!app()) {
+if (!await app(process.argv[2])) {
     console.log('Failed to delete all builds.');
 } else {
     console.log('I believe in miracles! Cleaned up all builds!');
