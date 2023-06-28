@@ -25,7 +25,7 @@ const getAllBuilds = async () => {
 
 const getBuildLeases = async buildID => {
     const params = {
-        'api-version': '6.0'
+        'api-version': '6.1-preview.1'
     }
 
     try {
@@ -42,7 +42,7 @@ const getBuildLeases = async buildID => {
 
 const deleteBuildLease = async leaseID => {
     const params = {
-        'api-version': '7.1-preview.2'
+        'api-version': '6.0-preview.2'
     }
 
     try {
@@ -85,10 +85,26 @@ const deleteBuild = async buildURL => {
     }
 }
 
+const deleteBuildDefinition = async definitionID => {
+    const params = {
+        'api-version': '6.0'
+    }
+    try {
+        const url = `${process.env.BASE_API_URL}/build/definitions/${definitionID}`;
+        console.log(`Deleting build definition at ${url}`)
+        const res = await axios.delete(url, { headers, params });
+        return res.status === 200 || res.status === 204;
+    } catch (e) {
+        console.log(e.message);
+        return false;
+    }
+}
+
 module.exports = {
     getAllBuilds,
     getBuildLeases,
     deleteBuildLease,
     removeKeepForeverOnBuild,
-    deleteBuild
+    deleteBuild,
+    deleteBuildDefinition
 }

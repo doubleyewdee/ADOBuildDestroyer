@@ -1,5 +1,5 @@
 const { config } = require("./config/config");
-const { getAllBuilds, getBuildLeases, deleteBuildLease, removeKeepForeverOnBuild, deleteBuild } = require('./services/azure');
+const { getAllBuilds, getBuildLeases, deleteBuildLease, removeKeepForeverOnBuild, deleteBuild, deleteBuildDefinition } = require('./services/azure');
 
 const app = async () => {
     while (true) {
@@ -13,24 +13,18 @@ const app = async () => {
             if (build.keepForever === true) {
                 if (!await removeKeepForeverOnBuild(build.id)) {
                     console.log(`Failed to remove keepforever bit on build ${build.id}`);
-                    clean = false;
                 }
             }
 
-            if (build.retainedByRelease === true) {
-                const leases = await getBuildLeases(build.id);
-                if (!leases || leases.length === 0) {
-                    console.log('Legacy build has magic leases. giving up, go use the UI');
-                    continue;
-                }
+            const leases = await getBuildLeases(build.id);
+            if (leases) {
                 for (const lease of leases) {
-                    if (lease.protectPipeline === true) {
+                    if (lease.protectPipeline === true || lease.ownerId === 'User:Legacy Retention Model') {
                         if (!await deleteBuildLease(lease.leaseId)) {
                             console.log(`Failed to delete lease ${lease.leaseId}`);
-                            clean = false;
                         }
                     }
-                };
+                }
             }
 
             if (!await deleteBuild(build.url)) {
@@ -40,11 +34,12 @@ const app = async () => {
         };
         if (!clean) {
             console.log('Failed to delete all builds. The ADO API struggles with old builds. Good luck with the UI.');
-            return clean;
+            break;
         }
     }
 
-    console.log('Deleted all builds successfully!');
+    console.log('Done trying to delete leases/builds. Attempting to delete build definition.');
+    await deleteBuildDefinition(process.env.BUILD_DEFINITION_ID);
     return clean;
 }
 
